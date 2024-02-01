@@ -19,7 +19,7 @@ setup(
     license="MIT License",
     keywords=[],
     url="",
-    packages=find_packages(),
+    packages=["api"],
     scripts=[],
     install_requires=read("requirements.txt").splitlines(),
     include_package_data=True,

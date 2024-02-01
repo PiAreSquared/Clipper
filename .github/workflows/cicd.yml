@@ -65,6 +65,7 @@ jobs:
         python3 -m pip install -r requirements.txt
     - name: Build API Code
       run: |
+        touch api/__init__.py
         python3 setup.py bdist_wheel > api_build.log
     - name: Archive API build artiacts
       uses: actions/upload-artifact@v1
