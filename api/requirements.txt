@@ -9,3 +9,4 @@ starlette>=0.34.0
 requests>=2.30.0
 pytest-asyncio>=0.23.0
 wheel>=0.41.0
+build>=1.0.0

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]  
+include = ["api"]
+exclude = []
+namespaces = false
+
+[project]
+name = "SportsReelsAPI"
+version = "0.0.1"
+authors = [
+    { name="Vishal Muthuraja", email="vmuthura@purdue.edu" },
+    { name="Rohan Malavathu", email="rmalavat@purdue.edu" },
+    { name="Dev Thakkar", email="dthakka9@purdue.edu" },
+]
+description = ""
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

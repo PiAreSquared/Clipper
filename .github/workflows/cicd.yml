@@ -61,12 +61,12 @@ jobs:
         python-version: '3.10'
     - name: Install dependencies
       run: |
+        apt install python3.10-venv
         python3 -m pip install --upgrade pip
         python3 -m pip install -r requirements.txt
     - name: Build API Code
       run: |
-        touch api/__init__.py
-        python3 setup.py bdist_wheel > api_build.log
+        python3 -m build > api_build.log
     - name: Archive API build artiacts
       uses: actions/upload-artifact@v1
       with:
