@@ -20,7 +20,7 @@ jobs:
         mkdir -p reports/flake8
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=79 --statistics --format=html --htmldir=reports/flake8
     - name: Archive flake8 coverage results
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: flake8-coverage-report
         path: reports/flake8/
@@ -44,7 +44,7 @@ jobs:
         python3 -m pip install pytest pytest-cov pytest-html pytest-sugar pytest-json-report
         pytest -v --cov --html=reports/pytest/report.html
     - name: Archive pytest coverage results
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: pytest-coverage-report
         path: reports/pytest/
@@ -68,9 +68,9 @@ jobs:
       run: |
         python3 -m build > api_build.log
     - name: Archive API build artiacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
-        name: pytest-coverage-report
+        name: api-build
         path: |
           api_build.log
           dist/*
