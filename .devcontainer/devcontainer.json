@@ -6,8 +6,10 @@
 	// "image": "mcr.microsoft.com/devcontainers/universal:2-linux"
 	"build": {
 		"dockerfile": "Dockerfile"
-	}
-
+	},
+	"mounts": [
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+	]
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 

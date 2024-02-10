@@ -1,0 +1,7 @@
+{
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "python.analysis.extraPaths": [
+        "/usr/local/lib/python3.10/dist-packages",
+        "/home/vscode/.local/lib/python3.10/site-packages"
+    ]
+}

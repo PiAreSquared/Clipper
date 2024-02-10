@@ -18,7 +18,7 @@ jobs:
         pip install flake8 flake8-html
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         mkdir -p reports/flake8
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=79 --statistics --format=html --htmldir=reports/flake8
+        flake8 . --count --exit-zero --max-complexity=10 --statistics --format=html --htmldir=reports/flake8
     - name: Archive flake8 coverage results
       uses: actions/upload-artifact@v4
       with:
