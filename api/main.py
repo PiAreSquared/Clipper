@@ -8,12 +8,9 @@ from streaming_form_data.targets import FileTarget, ValueTarget
 
 from exceptions import FileLimitExceededException, FileTypeUnsupportedException
 from upload_file import get_filename_and_type
-
+from constants import MAX_FILE_SIZE, ALLOWED_FILE_TYPES
 
 app = FastAPI()
-
-MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024  # 5GB
-ALLOWED_FILE_TYPES = ["video/mp4", "video/quicktime"]
 
 
 class MaxFileSizeValidator(object):
@@ -24,7 +21,7 @@ class MaxFileSizeValidator(object):
     def __call__(self, chunk_size: int):
         self.current_size += chunk_size
         if self.current_size > self.max_size:
-            raise FileLimitExceededException(max_size=MAX_FILE_SIZE)
+            raise FileLimitExceededException(size=self.current_size, max_size=MAX_FILE_SIZE)
 
 
 @app.exception_handler(FileLimitExceededException)

@@ -1,6 +1,7 @@
-class FileLimitExceededException(Exception):
-    MAX_FILE_SIZE = 5 * 1024 * 1024 * 1024  # 5GB
+from constants import MAX_FILE_SIZE
 
+
+class FileLimitExceededException(Exception):
     def __init__(self, size: int, max_size=MAX_FILE_SIZE):
         self.size = size
         self.max_size = max_size
