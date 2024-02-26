@@ -104,6 +104,16 @@ import os
 import sys
 import time
  
+def _in_seconds(time_str: str) -> int:
+    """
+    Converts a time string in 'HH:MM:SS' format to seconds.
+    
+    :param time_str: The time string in 'HH:MM:SS' format.
+    :return: The time in seconds.
+    """
+    h, m, s = time_str.split(':')
+    return int(h) * 3600 + int(m) * 60 + int(s)
+
 class VideoEditor:
     def __init__(self, input_video_path: str, output_video_path: str, audio_path: str, stdout_log_file: str, stderr_log_file: str):
         self.input_video_path = input_video_path
@@ -159,9 +169,8 @@ class VideoEditor:
         """
         if (start_time > end_time):
             raise ValueError("Start time cannot be greater than end time.")
-        elif (end_time > self.duration or start_time > self.duration):
+        elif (_in_seconds(end_time) > float(self.duration) or _in_seconds(start_time) > float(self.duration)):
             raise ValueError("interval limit(s) cannot be greater than the duration of the video.")
-        
         command = ['ffmpeg', '-i', self.input_video_path, '-ss', start_time, '-to', end_time, '-c', 'copy', output_file]
         with open(self.stdout_log_file, 'a') as output_log, open(self.stderr_log_file, 'a') as error_log:
             subprocess.run(command, stdout=output_log, stderr=error_log, check=True)
@@ -205,13 +214,13 @@ class VideoEditor:
         
 if __name__ == "__main__":
     # Example usage
-    video_path = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\input.mp4"
-    output_path = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\output_video.mp4"
-    audio_path = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\audio.mp3"
-    output_path_no_audio = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\output_video_no_audio.mp4"
-    output_path_with_audio = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\output_video_with_audio.mp4"
-    stdout_log_file = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\stdout_log.txt"
-    stderr_log_file = r"C:\Users\devth\OneDrive - purdue.edu\SeniorDesign\Open-Source-Software-Senior-Design-Project\data\stderr_log.txt"
+    video_path = r"data\input.mp4"
+    output_path = r"data\output_video.mp4"
+    audio_path = r"data\audio.mp3"
+    output_path_no_audio = r"data\output_video_no_audio.mp4"
+    output_path_with_audio = r"data\output_video_with_audio.mp4"
+    stdout_log_file = r"data\stdout_log.txt"
+    stderr_log_file = r"data\stderr_log.txt"
     
     if (os.path.exists(output_path)):
         os.remove(output_path)
