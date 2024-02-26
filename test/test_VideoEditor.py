@@ -111,3 +111,4 @@ if __name__ == "__main__":
     Test_TrimClip_StartTimeGreaterThanEndTime()
     Test_TrimClip_IntervalGreaterThanDuration()
     print("All tests passed!")
+    os.remove(video_path)
