@@ -111,4 +111,24 @@ if __name__ == "__main__":
     Test_TrimClip_StartTimeGreaterThanEndTime()
     Test_TrimClip_IntervalGreaterThanDuration()
     print("All tests passed!")
-    os.remove(video_path)
+    try:
+        os.remove(video_path)
+    except FileNotFoundError:
+        pass
+    try:
+        os.remove(output_path)
+    except FileNotFoundError:
+        pass
+    try:
+        os.remove(audio_path)
+    except FileNotFoundError:
+        pass
+    try:
+        os.remove(stdout_log_file)
+    except FileNotFoundError:
+        pass
+    try:
+        os.remove(stderr_log_file)
+    except FileNotFoundError:
+        pass
+    print("Test video and logs removed.")
