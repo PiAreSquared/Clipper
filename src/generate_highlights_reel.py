@@ -154,7 +154,8 @@ def lambda_handler(event, context):
     # get s3 file
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
-    filename = key.split('/')[-1].rsplit('.', 1)[0] + f"-{time.time_ns() // 91749}-{time.time() // 95137}"
+    # filename = key.split('/')[-1].rsplit('.', 1)[0] + f"-{time.time_ns() // 91749}-{time.time() // 95137}"
+    filename = key.split('/')[-1].rsplit('.', 1)[0]
 
     presigned_url = f"/tmp/{filename}.mp4"
     s3_client.download_file(bucket, key, presigned_url)
