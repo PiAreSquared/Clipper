@@ -1,10 +1,49 @@
 import React from 'react';
-
+import AWS from 'aws-sdk';
+import { useNavigate } from 'react-router-dom';
 
 interface UploadFileFinishedProps {
 }
 
 const UploadFileFinished: React.FC<UploadFileFinishedProps> = () => {
+
+
+    var sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+
+    var params = {
+        MaxNumberOfMessages: 1,
+        QueueUrl: "https://sqs.us-east-2.amazonaws.com/992382425958/VideoProcessedQueue",
+        WaitTimeSeconds: 600,
+    };
+
+    sqs.receiveMessage(params, function(err, data) {
+        if (err) {
+            console.log("Receive Error", err);
+        }
+        else {
+            const sqsMessageObj = JSON.parse(data.Messages[0].Body);
+            const messageObj = JSON.parse(sqsMessageObj.Message);
+            const key = messageObj.requestPayload.Records[0].s3.object.key;
+            var deleteParams = {
+                QueueUrl: "https://sqs.us-east-2.amazonaws.com/992382425958/VideoProcessedQueue",
+                ReceiptHandle: data.Messages[0].ReceiptHandle
+            };
+            sqs.deleteMessage(deleteParams, function(err, data) {
+                if (err) {
+                    console.log("Delete Error", err);
+                }
+                else {
+                    console.log("Message Deleted", data);
+                }
+                const filename = key.split('.')[0];
+                const final = '/highlights/' + filename + '_highlights.mp4';
+                const navigate = useNavigate();
+                navigate(final);
+            });
+        }
+    });
+    
+
 
     return (
         <>
@@ -28,3 +67,60 @@ const UploadFileFinished: React.FC<UploadFileFinishedProps> = () => {
 };
 
 export default UploadFileFinished;
+
+
+
+// var bucketName = 'processed-games';
+
+// const aws_bucket_info = {
+//     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+//     Bucket: bucketName,
+//     region: process.env.AWS_REGION,
+//     ACL: 'public-read',
+// };
+
+// async function retrieveDataFromS3(message: string) {
+//     var s3 = new AWS.S3({
+//         accessKeyId: aws_bucket_info.accessKeyId,
+//         selectAccessKey: aws_bucket_info.secretAccessKey,
+//         region: aws_bucket_info.region
+//     });
+//     var params = {
+//         Bucket: 'video-processed-bucket',
+//         Key: message,
+
+//     s3.getObject(params, function(err, data) {
+//         if (err) {
+//             console.log(err, err.stack);
+//         }
+//         else {
+//             console.log(data);
+//         }
+//     });
+// }
+
+// async function retrieveDataFromS3(message: string, file: string) {
+//     const client = new AWS.S3Client({});
+    //  const sqsMessageObj = JSON.parse(message);
+    //  const messageObj = JSON.parse(sqsMessageObj.Message);
+    //  const key = messageObj.requestPayload.Records[0].s3.object.key;
+//     if (file === key) {
+
+//         const command = new GetObjectCommand({
+//             Bucket: bucketName,
+//             Key: key,
+//         });
+//         try {
+//             const response = await client.send(command);
+//             return response;
+//             console.log(response);
+//         }
+//         catch (err) {
+//             console.log(err);
+//         }
+//     }
+//     else {
+//         console.log('File not found');
+//     }
+// }
