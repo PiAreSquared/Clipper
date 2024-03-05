@@ -2,12 +2,12 @@ import React from "react";
 import AWS from "aws-sdk";
 import { useParams } from 'react-router-dom'
 
-interface ViewHighlightsProps {
+interface ViewHighlightsCommentaryProps {
     bucket_name: string;
 }
 
 
-const ViewHighlights: React.FC<ViewHighlightsProps> = ({ bucket_name = "processed-games" }) => {
+const ViewHighlightsCommentary: React.FC<ViewHighlightsCommentaryProps> = ({ bucket_name = "processed-commentary-games" }) => {
     const [url, setUrl] = React.useState("");
     const { video_key } = useParams();
 
@@ -46,9 +46,9 @@ const ViewHighlights: React.FC<ViewHighlightsProps> = ({ bucket_name = "processe
 
     return (
             <div className="container mx-auto py-8 flex justify-center items-center flex-col">
-                <iframe title="highlights-clip" src={url} width={1280} height={720} allowFullScreen></iframe>
+                <iframe title="highlights-clip-commentary" src={url} width={1280} height={720} allowFullScreen></iframe>
             </div>
             
         );
 }
-export default ViewHighlights;
+export default ViewHighlightsCommentary;

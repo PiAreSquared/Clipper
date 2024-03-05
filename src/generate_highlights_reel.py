@@ -121,7 +121,7 @@ def main(game_filepath=GAME_FILEPATH, output_file=OUTPUT_FILE):
 
     if output_file == "DUMP_TO_S3":
         s3_filepath = game_filepath.split('/')[-1]
-        s3_filepath = s3_filepath.split('.')[0] + OUTPUT_FILE_SUFFIX + s3_filepath.split('.')[1]
+        s3_filepath = s3_filepath.split('.')[0] + OUTPUT_FILE_SUFFIX + "." + s3_filepath.split('.')[1]
         os.chdir('/tmp')
         final_cut.write_videofile("/tmp/output.mp4")
         s3_client.upload_file("/tmp/output.mp4", BUCKET_NAME, s3_filepath)
@@ -150,7 +150,7 @@ def create_presigned_url(bucket_name, object_name, expiration=60):
 
 
 def lambda_handler(event, context):
-    import time
+    # import time
     # get s3 file
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')

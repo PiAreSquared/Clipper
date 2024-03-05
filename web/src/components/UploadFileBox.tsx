@@ -11,6 +11,7 @@ export default function UploadFileBox() {
     const [showUploadedConfirmation, setShowUploadedConfirmation] = useState(false);
     const [numBytesUploaded, setNumBytesUploaded] = useState(0);
     const [file, setFile] = useState(new File([], ''));
+    const [last_filename, setLastFilename] = useState('');
 
     const aws_bucket_info = {
         accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
@@ -126,6 +127,7 @@ export default function UploadFileBox() {
 
     const finishedUploading = () => {
         setShowUploader(false);
+        setLastFilename(file.name);
         setFile(new File([], ''));
         setShowUploadedConfirmation(true);
         setNumBytesUploaded(0);
@@ -175,6 +177,7 @@ export default function UploadFileBox() {
             }
             {showUploadedConfirmation &&
                 <UploadFileFinished
+                    filename={last_filename}
                     />
             }
         </div>
