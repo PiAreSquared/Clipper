@@ -40,3 +40,7 @@
 html, body, #app, #app>div {
   height: 100vh;
 }
+
+body {
+  background-color: black;
+}
