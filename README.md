@@ -10,7 +10,7 @@ Clipper is an application for generating highlights that employs a custom algori
 
 1. Clone the repository:
 
-    ```bash
+   ```bash
    https://github.com/PiAreSquared/Open-Source-Software-Senior-Design-Project.git
    ```
 
@@ -23,8 +23,8 @@ Clipper is an application for generating highlights that employs a custom algori
 3. Install frontend dependencies:
 
     ```bash
-   npm install
-   ```
+    npm install
+    ```
 
 4. Install backend dependencies:
 
@@ -36,9 +36,9 @@ Clipper is an application for generating highlights that employs a custom algori
 
 You may run our test suite to ensure that Clipper was setup and installed correctly.
 
-```bash
-pytest tests
-```
+    ```bash
+    pytest tests
+    ```
 
 ## Contributions
 
