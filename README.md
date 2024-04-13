@@ -22,7 +22,7 @@ Clipper is an application for generating highlights that employs a custom algori
 
 3. Install frontend dependencies:
 
-```bash
+    ```bash
    npm install
    ```
 
