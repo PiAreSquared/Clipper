@@ -6,6 +6,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from datetime import datetime
 import re
+import time
 
 
 def get_video(video_path, ocr_reader):
@@ -74,11 +75,18 @@ def getNumbers(ocrResult):
         if time_match is not None:
             leftScore = int(ocrResult[0][1])
             rightScore = int(ocrResult[2][1])
-            half = ocrResult[3][1]
+            half = ocrResult[3][1][0]
+            if(half == 'Z'):
+                half = 2
+            else:
+                half = int(half)
             timeSplit = re.split(time_shotclock, ocrResult[1][1])
-            print(timeSplit)
+
             time = split_text(timeSplit[0])
-            shotClock = int(timeSplit[1])
+            if(len(timeSplit) > 1):
+                shotClock = int(timeSplit[1])
+            else:
+                shotClock = -1
 
             print("Left Score: ", leftScore)
             print("Right Score: ", rightScore)
@@ -91,11 +99,18 @@ def getNumbers(ocrResult):
             if time_match is not None: 
                 leftScore = int(ocrResult[1][1])
                 rightScore = int(ocrResult[3][1])
-                half = ocrResult[2][1]
+                half = int(ocrResult[2][1][0])
+                if(half == 'Z'):
+                    half = 2
+                else:
+                    half = int(half)
                 timeSplit = re.split(time_shotclock, ocrResult[0][1])
                 print(timeSplit)
                 time = split_text(timeSplit[0])
-                shotClock = int(timeSplit[1])
+                if(len(timeSplit) > 1):
+                    shotClock = int(timeSplit[1])
+                else:
+                    shotClock = -1
 
                 print("Left Score: ", leftScore)
                 print("Right Score: ", rightScore)
@@ -107,7 +122,11 @@ def getNumbers(ocrResult):
     if(len(ocrResult) == 5):
         leftScore = int(ocrResult[leftScoreIndex][1])
         rightScore = int(ocrResult[rightScoreIndex][1])
-        half = ocrResult[halfIndex][1]
+        half = ocrResult[halfIndex][1][0]
+        if(half == 'Z'):
+            half = 2
+        else:
+            half = int(half)
         time = split_text(ocrResult[timeIndex][1])
         shotClock = ocrResult[shotClockIndex][1]
 
