@@ -218,7 +218,5 @@ def main(input_path, output_path):
     add_commentary_to_video(video_path, commentary_path, destination_path)
     
 
-if __name__ == '__main__':
-    main()
     
     
