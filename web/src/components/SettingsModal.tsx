@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 interface SettingsModalProps {
+    settings: Settings
     onClose: () => void;
     onSave: (settings: Settings) => void;
 }
@@ -11,10 +12,10 @@ interface Settings {
     numClips: number;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, onSave }) => {
-    const [commentary, setCommentary] = useState(false);
-    const [clipLength, setClipLength] = useState(15);
-    const [numClips, setNumClips] = useState(15);
+const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onClose, onSave }) => {
+    const [commentary, setCommentary] = useState(settings.commentary);
+    const [clipLength, setClipLength] = useState(settings.clipLength);
+    const [numClips, setNumClips] = useState(settings.numClips);
 
     const handleSave = () => {
         const settings: Settings = {

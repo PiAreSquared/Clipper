@@ -6,6 +6,7 @@ import Timeline from './Timeline.tsx';
 import SettingsModal from "./SettingsModal.tsx";
 import { IoIosOptions } from "react-icons/io";
 import AWS from 'aws-sdk';
+import { Navigate } from 'react-router-dom';
 
 interface Settings {
     commentary: boolean;
@@ -112,7 +113,7 @@ export default function UploadFileBox() {
                     },
                     body: JSON.stringify({
                         filename: s3_object_key,
-                        commentary: settings.commentary ? "true" : "false",
+                        include_commentary: settings.commentary ? "true" : "false",
                         clip_length: settings.clipLength,
                         number_of_clips: settings.numClips
                     })
@@ -165,6 +166,7 @@ export default function UploadFileBox() {
         setFile(new File([], ''));
         setShowUploadedConfirmation(true);
         setNumBytesUploaded(0);
+        // window.location.href = `/timeline/${filename}`;
     }
 
     const handleSettingsButtonClick = () => {
@@ -207,7 +209,7 @@ export default function UploadFileBox() {
                 </div>
             </div>
             {
-                isSettingsModalOpen && <SettingsModal onClose={handleSettingsModalClose} onSave={handleSettingsModalSave} />
+                isSettingsModalOpen && <SettingsModal settings={settings} onClose={handleSettingsModalClose} onSave={handleSettingsModalSave} />
             }
             {showConfirm && (
                 <UploadFileConfirm

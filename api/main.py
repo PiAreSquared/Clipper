@@ -10,6 +10,7 @@ from streaming_form_data.targets import FileTarget, ValueTarget
 from exceptions import FileLimitExceededException, FileTypeUnsupportedException
 from upload_file import get_filename_and_type
 from highlights_clipper import clip_video
+from overlay_commentary import main as overlay_commentary
 from constants import MAX_FILE_SIZE, ALLOWED_FILE_TYPES
 
 from mangum import Mangum
@@ -108,6 +109,7 @@ async def fetch_processed_video(request: Request):
 @app.post("/clip")
 async def clip_vid(request: Request):
     options = await request.json()
+    print(options)
     filename = options.get("filename")
     include_commentary = options.get("include_commentary", "False")
     if not include_commentary or include_commentary.lower() == "false":
@@ -121,8 +123,11 @@ async def clip_vid(request: Request):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Filename is missing.")
     
     try:
+        print("Clipping the video.")
         clip_video(s3_client, S3_BUCKET_UNPROCESSED_VIDS_NAME, filename, clip_length, number_of_clips)
+        print("Video clipped successfully.")
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f'There was an error processing the file. Please try again. {e}')
     
@@ -130,9 +135,13 @@ async def clip_vid(request: Request):
         return {"message": "Video clipped successfully."}
     
     try:
-        # ADD COMMENTARY
-        pass
+        print("Adding commentary to the video.")
+        s3_client.download_file(S3_BUCKET_UNPROCESSED_VIDS_NAME, "crowdnoise.mp3", "/tmp/crowdnoise.mp3")
+        overlay_commentary("/tmp/output.mp4", "/tmp/output_comm.mp4", "/tmp/crowdnoise.mp3")
+        s3_client.upload_file("/tmp/output_comm.mp4", S3_BUCKET_PROCESSED_COMM_VIDS_NAME, filename)
+        print("Commentary added successfully.")
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f'There was an error processing the file. Please try again. {e}')
     
@@ -214,74 +223,39 @@ async def upload_file(request: Request):
     filename, content_type = get_filename_and_type(request)
 
     if content_type not in ALLOWED_FILE_TYPES:
-        try:
-            size_validator = MaxFileSizeValidator(MAX_FILE_SIZE + 1024)
-            data = ValueTarget()
+        raise FileTypeUnsupportedException(content_type=content_type)
 
-            parser = StreamingFormDataParser(headers=request.headers)
-            parser.register("data", data)
+    try:
+        filepath = f"/tmp/{uuid.uuid4()}-{filename}"
+        size_validator = MaxFileSizeValidator(MAX_FILE_SIZE + 1024)
+        file_target = FileTarget(filepath, validator=MaxSizeValidator(MAX_FILE_SIZE))
+        data = ValueTarget()
 
-            s3_object_key = f"{uuid.uuid4()}-{filename}"
-            s3_object_data = io.BytesIO()
+        parser = StreamingFormDataParser(headers=request.headers)
+        parser.register("file", file_target)
+        parser.register("data", data)
 
-            # Create a multipart upload
-            response = s3_client.create_multipart_upload(Bucket=S3_BUCKET_UNPROCESSED_VIDS_NAME, Key=s3_object_key)
-            upload_id = response["UploadId"]
-            part_number = 1
+        async for chunk in request.stream():
+            size_validator(len(chunk))
+            parser.data_received(chunk)
 
-            async for chunk in request.stream():
-                size_validator(len(chunk))
-                parser.data_received(chunk)
-                s3_object_data.write(chunk)
+    except ClientDisconnect:
+        raise HTTPException(status_code=status.HTTP_499_CLIENT_CLOSED_REQUEST,
+                            detail="Client disconnected while uploading file.")
+    except FileLimitExceededException as e:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f'There was an error processing the file. Please try again. {e}')
 
-                # Upload each part as a separate chunk
-                if s3_object_data.tell() >= MAX_FILE_SIZE:
-                    s3_object_data.seek(0)
-                    response = s3_client.upload_part(
-                        Bucket=S3_BUCKET_UNPROCESSED_VIDS_NAME,
-                        Key=s3_object_key,
-                        PartNumber=part_number,
-                        UploadId=upload_id,
-                        Body=s3_object_data
-                    )
-                    part_number += 1
-                    s3_object_data.seek(0)
-                    s3_object_data.truncate()
+    if not file_target.multipart_filename:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="File is missing.")
 
-            # Upload the remaining part
-            if s3_object_data.tell() > 0:
-                s3_object_data.seek(0)
-                response = s3_client.upload_part(
-                    Bucket=S3_BUCKET_UNPROCESSED_VIDS_NAME,
-                    Key=s3_object_key,
-                    PartNumber=part_number,
-                    UploadId=upload_id,
-                    Body=s3_object_data
-                )
+    # Process the file content here
+    # Save the file to disk, etc.
 
-            # Complete the multipart upload
-            s3_client.complete_multipart_upload(
-                Bucket=S3_BUCKET_UNPROCESSED_VIDS_NAME,
-                Key=s3_object_key,
-                UploadId=upload_id,
-                MultipartUpload={"Parts": [{"PartNumber": i, "ETag": response["ETag"]} for i in range(1, part_number + 1)]}
-            )
-
-        except ClientDisconnect:
-            raise HTTPException(status_code=status.HTTP_499_CLIENT_CLOSED_REQUEST,
-                                detail="Client disconnected while uploading file.")
-        except FileLimitExceededException as e:
-            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                                detail=str(e))
-        except ValidationError as e:
-            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                                detail=str(e))
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail=f'There was an error processing the file. Please try again. {e}')
-
-    # if not file_target.multipart_filename:
-    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="File is missing.")
-
-    return {"filename": filename, "filepath": s3_object_key, "file_size": size_validator.current_size}
-
+    return {"filename": filename, "filepath": filepath, "file_size": size_validator.current_size}
