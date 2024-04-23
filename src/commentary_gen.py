@@ -176,18 +176,33 @@ def overlay_commentary(commentary_path, background_noise_path, output_path):
     # Export the resulting audio to a new MP3 file
     overlayed_audio.export(output_path, format="mp3")
     
-def main():
-    video_path = r"C:\Users\devth\OneDrive - purdue.edu\Clipper\Open-Source-Software-Senior-Design-Project\data\bbgame_5mins.mp4"
-    speech_file_path = r"C:\Users\devth\OneDrive - purdue.edu\Clipper\Open-Source-Software-Senior-Design-Project\data\speech_files"
-    destination_path = r"C:\Users\devth\OneDrive - purdue.edu\Clipper\Open-Source-Software-Senior-Design-Project\data\commentary_without_background.mp3"
-    background_noise_path = r"C:\Users\devth\OneDrive - purdue.edu\Clipper\Open-Source-Software-Senior-Design-Project\data\crowdnoise.mp3"
+def add_commentary_to_video(video_path, commentary_path, output_path):
+    # Remove the audio from the original video
+    video = VideoFileClip(video_path)
+    audio_free_video = video.without_audio()
+    temp_path = video_path.replace(".mp4", "_temp.mp4")
+    audio_free_video.write_videofile(temp_path)
+    no_audio_video = VideoFileClip(temp_path)
+    commentary = AudioFileClip(commentary_path)
+    # Add the commentary audio to the video
+    final_video = no_audio_video.set_audio(commentary)
+    final_video.write_videofile(output_path)
+    
+def main(input_path, output_path):
+    video_path = input_path
+    destination_path = output_path
+    speech_file_path = input_path.replace(".mp4", "_speech_files")
+    commentary_without_background_path = input_path.replace(".mp4", "_commentary_without_background.mp3")
+    if os.path.exists(commentary_without_background_path):
+        os.remove(commentary_without_background_path)
+    background_noise_path = r"C:\Users\devth\OneDrive - purdue.edu\Clipper\Open-Source-Software-Senior-Design-Project\data\crowdnoise.mp3" # Please hardcode the path to the background noise file
     clipped_background_noise_path = background_noise_path.replace(".mp3", "_clipped.mp3")
     if os.path.exists(clipped_background_noise_path):
         os.remove(clipped_background_noise_path)
     adjusted_background_noise_path = background_noise_path.replace(".mp3", "_adjusted.mp3")
     if os.path.exists(adjusted_background_noise_path):
         os.remove(adjusted_background_noise_path)
-    commentary_path = r"C:\Users\devth\OneDrive - purdue.edu\Clipper\Open-Source-Software-Senior-Design-Project\data\commentary.mp3"
+    commentary_path = input_path.replace(".mp4", "_commentary.mp3")
     if os.path.exists(commentary_path):
         os.remove(commentary_path)
     current_time = datetime.now()
@@ -196,10 +211,11 @@ def main():
     commentary_list_1 = []
     commentary_list_2 = []
     get_commentary(old_commentary, commentary_list_1, commentary_list_2)
-    tts(commentary_list_1, commentary_list_2, speech_file_path, destination_path)
+    tts(commentary_list_1, commentary_list_2, speech_file_path, commentary_without_background_path)
     volume_data = get_volume_data(video_path)
     get_background_noise(volume_data, background_noise_path, clipped_background_noise_path, adjusted_background_noise_path)
-    overlay_commentary(destination_path, adjusted_background_noise_path, commentary_path)
+    overlay_commentary(commentary_without_background_path, adjusted_background_noise_path, commentary_path)
+    add_commentary_to_video(video_path, commentary_path, destination_path)
     
 
 if __name__ == '__main__':
