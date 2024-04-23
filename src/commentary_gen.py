@@ -42,6 +42,7 @@ def get_background_noise(volume_data, background_noise_path, clipped_background_
         adjusted_clips.append(audio_clip)
     adjusted_audio = concatenate_audioclips(adjusted_clips)
     adjusted_audio.write_audiofile(final_audio_path)
+    os.remove(clipped_background_noise_path)
     # Update the background noise to match the volume of the video
     
     
@@ -59,11 +60,6 @@ def get_volume_data(video_path):
 
     # volume_data = sorted(volume_data, key=lambda x: x[1], reverse=True)
     return volume_data
-
-def format_background_noise():
-    pass
-    
-
 
 def get_commentary(old_commentary, commentary_list_1, commentary_list_2):
     client_groq = Groq(
@@ -165,6 +161,8 @@ def tts(commentary_list_1, commentary_list_2, speech_file_path, destination_path
 
     combined_audio = concatenate_audioclips(audio_clips)
     combined_audio.write_audiofile(destination_path)
+    for audio_file in combined_list:
+        os.remove(audio_file)
     
 def overlay_commentary(commentary_path, background_noise_path, output_path):
     commentary = AudioSegment.from_mp3(commentary_path)
@@ -175,6 +173,8 @@ def overlay_commentary(commentary_path, background_noise_path, output_path):
 
     # Export the resulting audio to a new MP3 file
     overlayed_audio.export(output_path, format="mp3")
+    os.remove(commentary_path)
+    os.remove(background_noise_path)
     
 def add_commentary_to_video(video_path, commentary_path, output_path):
     # Remove the audio from the original video
@@ -187,6 +187,8 @@ def add_commentary_to_video(video_path, commentary_path, output_path):
     # Add the commentary audio to the video
     final_video = no_audio_video.set_audio(commentary)
     final_video.write_videofile(output_path)
+    os.remove(temp_path)
+    os.remove(commentary_path)
     
 def main(input_path, output_path):
     video_path = input_path
