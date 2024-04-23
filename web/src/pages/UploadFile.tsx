@@ -4,7 +4,7 @@ import UploadFileBox from "../components/UploadFileBox.tsx";
 export default function UploadFile() {
   return (
     <>
-        <div className="container mx-auto py-8">
+        {/* <div className="container mx-auto py-8">
           <h1 className="text-2xl font-bold mb-4 dark:text-white">Usage</h1>
           <div className="grid grid-cols-4 gap-4">
             <div className="flex items-center">
@@ -32,7 +32,7 @@ export default function UploadFile() {
               </div>
             </div>
           </div>
-      </div>
+      </div> */}
       <UploadFileBox />
     </>
   );

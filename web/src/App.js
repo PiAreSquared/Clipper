@@ -5,6 +5,7 @@ import Header from './components/Header.tsx';
 import Footer from './components/Footer.tsx';
 import VideoHighlights from './components/ViewHighlights.tsx';
 import VideoHighlightsCommentary from './components/ViewHighlightsCommentary.tsx';
+import Timeline from './components/Timeline.tsx';
 import {Routes, Route} from 'react-router-dom';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
               <Route path="/" element={<UploadFile />} />
               <Route path="/highlights/:video_key" element={<VideoHighlights />} />
               <Route path="/commentary/:video_key" element={<VideoHighlightsCommentary />} />
+              <Route path="/timeline/:video_key" element={<Timeline />} />
             </Routes>
           </div>
         <Footer />
