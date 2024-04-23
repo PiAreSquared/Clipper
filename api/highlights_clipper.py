@@ -62,6 +62,9 @@ def get_video(video_path, ocr_reader, clip_length):
 
     highlights = []
 
+    top_left = []
+    bottom_right = []
+
 
     for frame in range(1, num_frames, int(fps) * rate):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
