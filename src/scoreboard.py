@@ -28,7 +28,7 @@ def logistic_function(t, A=1, k=1, c=0, d=0):
     return A / (1 + np.exp(-k * (t - c))) + d
 
 
-def get_video(video_path, ocr_reader):
+def get_video(video_path, ocr_reader, clip_length):
 
     start = time.time()
     cap = cv2.VideoCapture(video_path)
@@ -46,6 +46,15 @@ def get_video(video_path, ocr_reader):
     timePast = -1
     halfPast = -1
     shotClockPast = -1
+
+
+    rightscoreChecker1 = 0
+    rightscoreChecker2 = 0
+    rightscoreChecker3 = 0
+
+    leftscoreChecker1 = 0
+    leftscoreChecker2 = 0
+    leftscoreChecker3 = 0
 
     deltaScore = 0
     maxVolume = 0
@@ -68,22 +77,28 @@ def get_video(video_path, ocr_reader):
     
 
         result = ocr_reader.readtext(crop_img)
+        # for x in result:
+        #     print(x[1])
 
         if scoreboardFound:
             leftScore, rightScore, gameTime, half, shotClock = getNumbers(result)
             scored=False
             # print("Left Score: ", leftScore, "Right Score: ", rightScore, "past Left", leftScorePast, "past Right", rightScorePast)
+            if (leftScore != -1 and leftScore == leftScorePast + 1):
+                leftScorePast = leftScore
+            if (rightScore != -1 and rightScore == rightScorePast + 1):
+                rightScorePast = rightScore
             if(leftScore != -1 and leftScore < leftScorePast + 4 and leftScore > leftScorePast + 1):
-                soundBit = cut(max(0,int(timestamp)-10), int(timestamp) + 3, video_clip)
+                soundBit = cut(max(0,int(timestamp)-(clip_length-3)), int(timestamp) + 3, video_clip)
                 maxVolume = soundBit.max_volume()
-                print("Left Score: ", leftScore, "Right Score: ", rightScore, "Time: ", time, "Half: ", half, "Shot Clock: ", shotClock)
-                highlights.append([max(0,int(timestamp)-10),int(timestamp) + 3, maxVolume, gameTime, half, shotClock, leftScore - rightScore, leftScorePast - rightScorePast])
+                # print("Left Score: ", leftScore, "Right Score: ", rightScore, "Time: ", time, "Half: ", half, "Shot Clock: ", shotClock)
+                highlights.append([max(0,int(timestamp)-(clip_length-3)),int(timestamp) + 3, maxVolume, gameTime, half, shotClock, leftScore - rightScore, "left"])
                 leftScorePast = leftScore
             if(rightScore != -1 and rightScore < rightScorePast + 4 and rightScore > rightScorePast +1):
-                soundBit = cut(max(0,int(timestamp)-10), int(timestamp) + 3, video_clip)
+                soundBit = cut(max(0,int(timestamp)-(clip_length-3)), int(timestamp) + 3, video_clip)
                 maxVolume = soundBit.max_volume()
-                print("Left Score: ", leftScore, "Right Score: ", rightScore, "Time: ", time, "Half: ", half, "Shot Clock: ", shotClock)
-                highlights.append([max(0,int(timestamp)-10),int(timestamp) + 3, maxVolume, gameTime, half, shotClock, leftScore - rightScore, leftScorePast - rightScorePast])
+                # print("Left Score: ", leftScore, "Right Score: ", rightScore, "Time: ", time, "Half: ", half, "Shot Clock: ", shotClock)
+                highlights.append([max(0,int(timestamp)-(clip_length-3)),int(timestamp) + 3, maxVolume, gameTime, half, shotClock, leftScore - rightScore, "right"])
                 rightScorePast = rightScore
             if gameTime != -1:
                 timePast = gameTime
@@ -91,6 +106,20 @@ def get_video(video_path, ocr_reader):
                 halfPast = half
             if shotClock != -1:
                 shotClockPast = shotClock
+            
+
+            if rightscoreChecker1 != -1 and rightscoreChecker1 == rightscoreChecker2 and rightscoreChecker2 == rightscoreChecker3 and rightScore == rightscoreChecker1:
+                rightScorePast = rightscoreChecker1
+            if leftscoreChecker1 != -1 and leftscoreChecker1 == leftscoreChecker2 and leftscoreChecker2 == leftscoreChecker3 and leftScore == leftscoreChecker1:
+                leftScorePast = leftscoreChecker1
+
+            rightscoreChecker3 = rightscoreChecker2
+            rightscoreChecker2 = rightscoreChecker1
+            rightscoreChecker1 = rightScore
+
+            leftscoreChecker3 = leftscoreChecker2
+            leftscoreChecker2 = leftscoreChecker1
+            leftscoreChecker1 = leftScore
 
         if not scoreboardFound:
             top_left, bottom_right = detectScoreboard(result)
@@ -98,7 +127,7 @@ def get_video(video_path, ocr_reader):
             scoreboardFound = True
             rightScorePast = 0
             leftScorePast = 0
-
+        # print("--------------------------------")
     
         # cv2.imshow("frame", crop_img)
         # key = cv2.waitKey(0) 
@@ -108,7 +137,7 @@ def get_video(video_path, ocr_reader):
         #    break
     stop = time.time()
     print(stop-start)
-    print(highlights)
+    # print(highlights)
     for x in highlights:
         print("Volume", x[2], "Game Time", x[3], "Half", x[4], "Shot Clock", x[5], "Old Score Differencial", x[7], "New Score", x[6])
     cap.release()
@@ -213,7 +242,7 @@ def highlightMetric(scoreDiff, gameTime, half, shotClock, volume, maxVolume):
 
     normalized_shotClock = int(shotClock) / 30
 
-    print(gameTime)
+    # print(gameTime)
 
     try:
         if(half == 1):
@@ -225,7 +254,7 @@ def highlightMetric(scoreDiff, gameTime, half, shotClock, volume, maxVolume):
     
     normalized_time = logistic_function(timeLeft, A=1, k=0.0025, c=40*60/2, d=0)
 
-    print(normalized_time, timeLeft, normalized_score, normalized_volume)
+    # print(normalized_time, timeLeft, normalized_score, normalized_volume)
 
     score = normalized_time*(1/3) + normalized_score*(1/3) + normalized_volume*(1/3)
 
@@ -284,26 +313,55 @@ def detectScoreboard(result):
         return [], []
       
 def main(s3_client, game_filepath=GAME_FILEPATH, output_file=OUTPUT_FILE, output_suffix=OUTPUT_FILE_SUFFIX, clip_length=15, clip_count=15):
+# if __name__ == '__main__':
     reader = easyocr.Reader(['en'])
-    file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'bbgame.mp4')
+    # file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'purdue_vs_michigan_st.mp4')
 
     start = time.time()
-    highlights = get_video(file_path, reader)
+    highlights = get_video(game_filepath, reader, clip_length)
     print('Got highlights', time.time() - start)
     highlightsRanked = []
-    video_clip = mpy.VideoFileClip(file_path)
+    video_clip = mpy.VideoFileClip(game_filepath)
 
     start = time.time()
     maxVolume = max(sub[2] for sub in highlights)
     for x in highlights:
         score = highlightMetric(x[6], x[3], x[4], x[5], x[2], maxVolume)
-        highlightsRanked.append([x[0], x[1], score])
+        highlightsRanked.append([x[0], x[1], score, x[7]])
     print('Got Ranked highlights', time.time() - start)
+    left_count = sum(row.count('left') for row in highlightsRanked)
+    right_count = sum(row.count('right') for row in highlightsRanked)
 
-    if len(highlightsRanked) > clip_count:
-        highlightsRanked = sorted(highlightsRanked, key=lambda x: x[2], reverse=True)[:clip_count]
+    left_num = int((right_count/(left_count + right_count))* clip_count)
+    right_num = int((left_count/(left_count + right_count))* clip_count)
+
+    if (left_num + right_num != clip_count):
+        if left_num > right_num:
+            right_num += 1
+        else:
+            left_num += 1
+
+    # print(left_num, right_num)
+
+    newHighlights = []
+    if len(highlightsRanked) > 10:
+        highlightsRanked = sorted(highlightsRanked, key=lambda x: x[2], reverse=True)
+        for x in highlightsRanked:
+            if x[3] == 'left' and left_num != 0:
+                left_num -= 1
+                newHighlights.append(x)
+            else:
+                if(x[3] == 'right' and right_num != 0):
+                    right_num -= 1
+                    newHighlights.append(x)
+            if(left_num == 0 and right_num == 0):
+                break
+        highlightsRanked = sorted(newHighlights, key=lambda x: x[0])
+    
     start = time.time()
     final_cut = mpy.concatenate_videoclips([vcut(moment, video_clip) for moment in highlightsRanked])
+
+    # final_cut.write_videofile("output.mp4")
     print('Got final cut', time.time() - start)
 
     start = time.time()
