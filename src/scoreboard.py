@@ -8,7 +8,15 @@ from datetime import datetime
 import re
 import time
 import moviepy.editor as mpy
+import boto3
 
+
+# NUM_LOUDEST = 12
+# NUM_BURSTY = 3
+GAME_FILEPATH = "path/to/game.mp4"
+OUTPUT_FILE = "path/to/output.mp4"
+BUCKET_NAME = os.environ.get('BUCKET_NAME', 'processed-games')
+OUTPUT_FILE_SUFFIX = os.environ.get('OUTPUT_FILE_SUFFIX', '_highlights')
 
 def vcut(t, video_clip):
     return video_clip.subclip(t[0], t[1])
@@ -275,26 +283,40 @@ def detectScoreboard(result):
     else:
         return [], []
       
-if __name__ == '__main__':
-    print('Hello')
+def main(s3_client, game_filepath=GAME_FILEPATH, output_file=OUTPUT_FILE, output_suffix=OUTPUT_FILE_SUFFIX, clip_length=15, clip_count=15):
     reader = easyocr.Reader(['en'])
     file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'bbgame.mp4')
+
+    start = time.time()
     highlights = get_video(file_path, reader)
+    print('Got highlights', time.time() - start)
     highlightsRanked = []
     video_clip = mpy.VideoFileClip(file_path)
 
-
+    start = time.time()
     maxVolume = max(sub[2] for sub in highlights)
     for x in highlights:
         score = highlightMetric(x[6], x[3], x[4], x[5], x[2], maxVolume)
         highlightsRanked.append([x[0], x[1], score])
+    print('Got Ranked highlights', time.time() - start)
 
-    numHighlights = 10
-    if len(highlightsRanked) > numHighlights:
-        highlightsRanked = sorted(highlightsRanked, key=lambda x: x[2], reverse=True)[:10]
-
+    if len(highlightsRanked) > clip_count:
+        highlightsRanked = sorted(highlightsRanked, key=lambda x: x[2], reverse=True)[:clip_count]
+    start = time.time()
     final_cut = mpy.concatenate_videoclips([vcut(moment, video_clip) for moment in highlightsRanked])
+    print('Got final cut', time.time() - start)
 
-    final_cut.write_videofile("output.mp4")
+    start = time.time()
+    if output_file == "DUMP_TO_S3":
+            s3_filepath = game_filepath.split('/')[-1]
+            s3_filepath = s3_filepath.split('.')[0] + output_suffix + "." + s3_filepath.split('.')[1]
+            os.chdir('/tmp')
+            final_cut.write_videofile("/tmp/output.mp4")
+            s3_client.upload_file("/tmp/output.mp4", BUCKET_NAME, s3_filepath)
+    else:
+        os.chdir('/tmp')
+        final_cut.write_videofile(output_file, logger=None, codec='libx264')
 
-    print(highlightsRanked)
+    print('Wrote video', time.time() - start)
+
+    
