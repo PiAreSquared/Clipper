@@ -1,0 +1,12 @@
+fastapi>=0.100.0
+uvicorn>=0.25.0
+pytest>=8.0.0
+httpx>=0.25.0
+python-multipart==0.0.6
+streaming_form_data>=1.13.0
+uuid>=1.30
+starlette>=0.34.0
+requests>=2.30.0
+pytest-asyncio>=0.23.0
+wheel>=0.41.0
+build>=1.0.0
