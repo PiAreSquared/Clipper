@@ -1,0 +1,77 @@
+name: Python API CI/CD
+
+on: [push, pull_request]
+
+jobs:
+
+  flake8:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Lint with flake8
+      run: |
+        pip install flake8 flake8-html
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        mkdir -p reports/flake8
+        flake8 . --count --exit-zero --max-complexity=10 --statistics --format=html --htmldir=reports/flake8
+    - name: Archive flake8 coverage results
+      uses: actions/upload-artifact@v4
+      with:
+        name: flake8-coverage-report
+        path: reports/flake8/
+
+  pytest:
+    name: Unit Testing
+    needs: flake8
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r api/requirements.txt
+    - name: Test with pytest
+      run: |
+        python3 -m pip install pytest pytest-cov pytest-html pytest-sugar pytest-json-report
+        pytest -v --cov --html=reports/pytest/report.html
+    - name: Archive pytest coverage results
+      uses: actions/upload-artifact@v4
+      with:
+        name: pytest-coverage-report
+        path: reports/pytest/
+  
+  build-wheel-file:
+    name: Build API Wheel File
+    needs: pytest
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        sudo apt install python3.10-venv
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r requirements.txt
+    - name: Build API Code
+      run: |
+        python3 -m build > api_build.log
+    - name: Archive API build artiacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: api-build
+        path: |
+          api_build.log
+          dist/*
+
